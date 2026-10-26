@@ -28,6 +28,10 @@ jobs:
         run: npx tsc --noEmit
       - name: Build static Next.js frontend
         run: npm run build
+      - name: Verify Tauri workspace configuration
+        shell: pwsh
+        run: |
+          cargo metadata --manifest-path src-tauri/Cargo.toml --no-deps --format-version 1 > $null
       - name: Check Rust backend
         run: cargo check --manifest-path src-tauri/Cargo.toml
       - name: Build portable Windows EXE

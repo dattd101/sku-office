@@ -1,4 +1,4 @@
-# Rust Office Modern — Windows desktop MVP
+# Rust Office Modern v0.4.1 — Windows desktop MVP
 
 **Architecture:** Next.js 15 (static export) + React 19 + Tailwind CSS + Tauri 2 + Rust.
 
@@ -53,3 +53,19 @@ Expected binary: `src-tauri/target/release/rust-office-modern.exe`.
 - No charts, pivot tables, formula evaluation, spellcheck engine, rich-text layout, animations, slide shape editor, print pipeline, or full Office compatibility.
 - No simultaneous multiple-document tabs.
 - For robust production Office compatibility, replace the simplistic OOXML layer with a tested document model and lossless package preservation strategy.
+
+## Fix for GitHub Actions Cargo workspace error (v0.4.1)
+
+The Tauri manifest now contains a standalone `[workspace]` table with `resolver = "2"`.
+This avoids accidental workspace inheritance when a repository also contains an
+older root `Cargo.toml` (for example from the earlier egui prototype). The
+workflow checks `cargo metadata` before `cargo check`.
+
+**Upload the extracted contents as the repository root**, not as a nested
+folder. Remove obsolete files from the previous egui project where possible.
+Do not add `src-tauri` to an unrelated root workspace while keeping the nested
+`[workspace]` declaration. Commit the new files, then start a NEW workflow run
+from the new commit (re-running an old failed run checks the old revision).
+
+This fix addresses the workspace configuration error shown in the supplied log.
+Compilation and runtime still need to be verified by the Windows runner.
