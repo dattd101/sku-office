@@ -1,4 +1,4 @@
-# Rust Office v0.5 — Manager + independent editor windows
+# Rust Office v0.5.1 — Manager + independent editor windows
 
 Windows desktop prototype using **Next.js 15**, **React 19**, **Tailwind CSS 3**, **Tauri 2**, and **Rust**. Word, Excel and PowerPoint open as separate windows from the Office Manager. Each editor is identified by a UUID session ID.
 
@@ -54,3 +54,9 @@ The executable depends on Microsoft Edge WebView2 Runtime being available on Win
 ## Validation
 
 This source bundle is structurally checked but **not compiled in this environment** because Rust/Cargo and Windows SDK are unavailable here. GitHub Actions is the build verification source of truth.
+
+## v0.5.1 fix — Tauri E0255
+
+The `open_document` helper in `src-tauri/src/lib.rs` is no longer annotated with `#[tauri::command]` and is no longer registered in `generate_handler!`. It is called internally by `sessions::import_session`, which remains the public Tauri command used by the frontend. This prevents Tauri's generated `__cmd__open_document` and `__tauri_command_name_open_document` macros from colliding with the imported helper in `sessions.rs`.
+
+Build validation was not performed locally (Cargo unavailable). The workflow performs `cargo check`, tests, and Windows release build.

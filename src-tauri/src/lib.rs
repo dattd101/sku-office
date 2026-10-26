@@ -44,7 +44,6 @@ impl OfficeDocument {
 #[derive(Serialize)]
 pub(crate) struct FileResult { pub(crate) path:String, pub(crate) document:OfficeDocument }
 
-#[tauri::command]
 pub(crate) fn open_document()->Result<Option<FileResult>,String> {
     let Some(path)=rfd::FileDialog::new().add_filter("Office documents", &["docx","xlsx","xls","pptx","json"]).pick_file() else {return Ok(None)};
     let ext=path.extension().and_then(|e|e.to_str()).unwrap_or("").to_lowercase();
@@ -83,7 +82,7 @@ fn save_document(document:OfficeDocument,path:Option<String>,save_as:bool)->Resu
 
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![open_document,save_document, sessions::create_session, sessions::import_session, sessions::get_session, sessions::list_sessions, sessions::snapshot_session, sessions::save_session, sessions::discard_session, sessions::open_editor_window, sessions::focus_manager])
+        .invoke_handler(tauri::generate_handler![save_document, sessions::create_session, sessions::import_session, sessions::get_session, sessions::list_sessions, sessions::snapshot_session, sessions::save_session, sessions::discard_session, sessions::open_editor_window, sessions::focus_manager])
         .run(tauri::generate_context!())
         .expect("failed to run Rust Office Modern");
 }

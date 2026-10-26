@@ -1,4 +1,4 @@
-name: Build Rust Office v0.5 Windows x64
+name: Build Rust Office v0.5.1 Windows x64
 on:
   push:
     branches: [main, master]
