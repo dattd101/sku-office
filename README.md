@@ -1,71 +1,56 @@
-# Rust Office Modern v0.4.1 — Windows desktop MVP
+# Rust Office v0.5 — Manager + independent editor windows
 
-**Architecture:** Next.js 15 (static export) + React 19 + Tailwind CSS + Tauri 2 + Rust.
+Windows desktop prototype using **Next.js 15**, **React 19**, **Tailwind CSS 3**, **Tauri 2**, and **Rust**. Word, Excel and PowerPoint open as separate windows from the Office Manager. Each editor is identified by a UUID session ID.
 
-This is a functional **MVP**, not a feature-complete Microsoft Office 2019 replacement. It contains three workspaces with modern Ribbon-inspired UI:
+## What's implemented
 
-- **Word:** editable plain text on an A4-like canvas, basic DOCX text import/export.
-- **Excel:** editable grid, multiple sheets, XLS/XLSX import and XLSX export. Formula strings are exported but **not calculated** inside the app.
-- **PowerPoint:** slide list, title/body editor, basic PPTX text import/export.
-- Native Windows file dialogs, New/Open/Save/Save As, basic in-memory undo/redo.
-- Optional JSON project files preserve this MVP's own data model.
+- Office Manager dashboard with new Word/Excel/PowerPoint, Open, recent/recovery list, resume, and remove recovery entry.
+- One Tauri EXE and multiple WebviewWindow editors. Switching applications does **not** replace the current editor state.
+- Rust-managed document snapshots under the Windows per-user application data directory (`.../dev.rustoffice.modern/recovery/*.json`). Snapshots are debounced at ~850ms and also attempted on window close. Manager scans persisted snapshots after restart.
+- Explicit Save/Save As to DOCX/XLSX/PPTX, plus simple import/export based on the existing v0.4 Rust format modules.
+- Existing Ribbon, Word plain-text editor, Excel grid and PowerPoint basic slide editor.
+- GitHub Actions for Windows x64, TypeScript check, Rust check/tests, Tauri `--no-bundle`, and portable EXE artifact.
 
-**IMPORTANT:** OOXML conversion is deliberately basic and **not round-trip safe** for complex documents. Opening and re-saving existing DOCX/PPTX/XLSX can discard unsupported formatting, media, embedded objects, charts, relationships, notes, macros and more. Work on copies of valuable files. Word formatting toolbar buttons are visual placeholders; native rich-text editing is not implemented.
+## Important limitations
 
-## Build via GitHub Actions (no local Rust required)
+This is an **MVP**, not an Office 2019 replacement. Word formatting, Excel formulas and advanced slide features are not implemented. Opening and re-saving complicated Office files may lose unsupported content. Always work on copies of valuable documents. Recovery snapshots are **not** the same as saving to the original file.
 
-1. Upload all project files **including `.github/workflows/windows-build.yml`** to a GitHub repository.
-2. Open **Actions → Build Rust Office Windows x64 → Run workflow**.
-3. After success, open the run → **Artifacts** → download `RustOfficeModern-Windows-x64-portable`.
-4. Extract the artifact and the contained `RustOfficeModern-Windows-x64-portable.zip` to obtain `RustOfficeModern.exe`.
+Autosave here means **recovery snapshots**, not silent overwriting of the Office file. Snapshots are stored per document and survive normal editor close or application crash *after the latest successful snapshot*. Edits made within the last ~850ms before a hard crash can be lost. The manager retains sessions until explicitly removed.
 
-The GitHub workflow runs `npm install`, TypeScript check, Next static export, Cargo check, Tauri `--no-bundle`, and archives the Windows x64 `.exe`. It does **not** create an installer. The executable requires Microsoft Edge WebView2 Runtime, normally present on Windows 10/11. On machines without it, install WebView2 Runtime separately.
+Removing a recovery entry while its editor is still open is not supported; close the editor first.
 
-## Local development
+## Run locally
 
-Prerequisites: Node.js 22, Rust stable MSVC, Visual Studio C++ Build Tools and Windows WebView2 runtime.
+Prerequisites: Windows 10/11, Node.js 22, Rust MSVC toolchain, Visual Studio C++ Build Tools and WebView2.
 
 ```powershell
 npm install
 npm run desktop
 ```
 
-To build a portable executable locally:
+For frontend only:
 
 ```powershell
-npm run desktop:build -- --no-bundle
+npm run dev
 ```
 
-Expected binary: `src-tauri/target/release/rust-office-modern.exe`.
+The browser alone cannot access Tauri commands; use the desktop app to test manager functionality.
 
-## Technical notes
+## GitHub Actions portable EXE
 
-- `next.config.ts` uses `output: 'export'`; **no Node server is required at runtime**.
-- `src-tauri/src/lib.rs` contains the Tauri IPC commands and JSON ↔ native Rust model conversion.
-- `src-tauri/src/formats.rs` contains limited OOXML readers/writers adapted from the earlier Rust MVP.
-- `components/office.tsx` contains the desktop UI. UI state is client-side; saving/opening calls native Rust.
-- No external CDN, fonts or API is needed at runtime.
-- The `.exe` has not been validated on a Windows runner in this environment. If the workflow reports an error, use the exact compiler log to refine the code.
+Push the project contents, including `.github/workflows/windows-build.yml`, to GitHub. Run **Build Rust Office v0.5 Windows x64** from the Actions tab. The workflow builds `src-tauri/target/release/rust-office-modern.exe` and publishes `RustOfficeModern-Windows-x64-portable.zip` as an artifact.
 
-## Known limitations
+The executable depends on Microsoft Edge WebView2 Runtime being available on Windows. `--no-bundle` does not create an installer.
 
-- Formatting controls beyond editing and navigation are not implemented.
-- No charts, pivot tables, formula evaluation, spellcheck engine, rich-text layout, animations, slide shape editor, print pipeline, or full Office compatibility.
-- No simultaneous multiple-document tabs.
-- For robust production Office compatibility, replace the simplistic OOXML layer with a tested document model and lossless package preservation strategy.
+## How it works
 
-## Fix for GitHub Actions Cargo workspace error (v0.4.1)
+- Main window (`main`) loads the manager.
+- `create_session` or `import_session` creates a recovery JSON with a UUID.
+- `open_editor_window` creates or focuses `editor-<uuid>` and loads `index.html?view=editor&session=<uuid>`.
+- Editor loads `get_session`, edits in React, and calls `snapshot_session` after changes.
+- `save_session` writes the chosen Office format and marks the recovery entry clean.
+- On next app launch, `list_sessions` allows recovery and reopening.
 
-The Tauri manifest now contains a standalone `[workspace]` table with `resolver = "2"`.
-This avoids accidental workspace inheritance when a repository also contains an
-older root `Cargo.toml` (for example from the earlier egui prototype). The
-workflow checks `cargo metadata` before `cargo check`.
+## Validation
 
-**Upload the extracted contents as the repository root**, not as a nested
-folder. Remove obsolete files from the previous egui project where possible.
-Do not add `src-tauri` to an unrelated root workspace while keeping the nested
-`[workspace]` declaration. Commit the new files, then start a NEW workflow run
-from the new commit (re-running an old failed run checks the old revision).
-
-This fix addresses the workspace configuration error shown in the supplied log.
-Compilation and runtime still need to be verified by the Windows runner.
+This source bundle is structurally checked but **not compiled in this environment** because Rust/Cargo and Windows SDK are unavailable here. GitHub Actions is the build verification source of truth.

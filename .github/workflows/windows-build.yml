@@ -1,4 +1,4 @@
-name: Build Rust Office Windows x64
+name: Build Rust Office v0.5 Windows x64
 on:
   push:
     branches: [main, master]
@@ -34,6 +34,8 @@ jobs:
           cargo metadata --manifest-path src-tauri/Cargo.toml --no-deps --format-version 1 > $null
       - name: Check Rust backend
         run: cargo check --manifest-path src-tauri/Cargo.toml
+      - name: Test Rust backend
+        run: cargo test --manifest-path src-tauri/Cargo.toml
       - name: Build portable Windows EXE
         run: npm run tauri -- build --no-bundle
       - name: Package portable application

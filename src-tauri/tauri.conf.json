@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Rust Office Modern",
-  "version": "0.4.1",
+  "productName": "Rust Office",
+  "version": "0.5.0",
   "identifier": "dev.rustoffice.modern",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -12,12 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "Rust Office Modern",
+        "title": "Rust Office Manager",
         "width": 1440,
         "height": 900,
         "minWidth": 950,
         "minHeight": 600,
-        "backgroundColor": "#f5f7fb"
+        "backgroundColor": "#f5f7fb",
+        "label": "main"
       }
     ],
     "security": {
@@ -25,10 +26,7 @@
     }
   },
   "bundle": {
-    "active": true,
-    "targets": [
-      "nsis"
-    ],
+    "active": false,
     "shortDescription": "Modern Rust Office desktop",
     "icon": [
       "icons/icon.png",

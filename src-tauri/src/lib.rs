@@ -1,5 +1,6 @@
 mod formats;
 mod model;
+mod sessions;
 
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::Path};
@@ -10,16 +11,16 @@ struct UiSheet { name: String, cells: BTreeMap<String,String> }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct UiSlide { title: String, body: String }
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct OfficeDocument {
-    mode: String,
-    word: String,
-    sheets: Vec<UiSheet>,
-    selected_sheet: usize,
-    slides: Vec<UiSlide>,
-    selected_slide: usize,
+pub(crate) struct OfficeDocument {
+    pub(crate) mode: String,
+    pub(crate) word: String,
+    pub(crate) sheets: Vec<UiSheet>,
+    pub(crate) selected_sheet: usize,
+    pub(crate) slides: Vec<UiSlide>,
+    pub(crate) selected_slide: usize,
 }
 impl OfficeDocument {
-    fn empty(mode: &str) -> Self { Self {
+    pub(crate) fn empty(mode: &str) -> Self { Self {
         mode:mode.into(),word:String::new(),sheets:vec![UiSheet{name:"Sheet1".into(),cells:BTreeMap::new()}],
         selected_sheet:0,slides:vec![UiSlide{title:"New presentation".into(),body:String::new()}],selected_slide:0,
     }}
@@ -41,10 +42,10 @@ impl OfficeDocument {
 }
 
 #[derive(Serialize)]
-struct FileResult { path:String, document:OfficeDocument }
+pub(crate) struct FileResult { pub(crate) path:String, pub(crate) document:OfficeDocument }
 
 #[tauri::command]
-fn open_document()->Result<Option<FileResult>,String> {
+pub(crate) fn open_document()->Result<Option<FileResult>,String> {
     let Some(path)=rfd::FileDialog::new().add_filter("Office documents", &["docx","xlsx","xls","pptx","json"]).pick_file() else {return Ok(None)};
     let ext=path.extension().and_then(|e|e.to_str()).unwrap_or("").to_lowercase();
     let document=match ext.as_str() {
@@ -57,7 +58,7 @@ fn open_document()->Result<Option<FileResult>,String> {
     Ok(Some(FileResult{path:path.display().to_string(),document}))
 }
 
-fn write_document(path:&Path,doc:&OfficeDocument)->Result<(),String> {
+pub(crate) fn write_document(path:&Path,doc:&OfficeDocument)->Result<(),String> {
     let ext=path.extension().and_then(|e|e.to_str()).unwrap_or("").to_lowercase();
     match ext.as_str() {
         "docx"=>formats::write_word(path,&WordDocument{text:doc.word.clone()}).map_err(|e|e.to_string()),
@@ -82,7 +83,7 @@ fn save_document(document:OfficeDocument,path:Option<String>,save_as:bool)->Resu
 
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![open_document,save_document])
+        .invoke_handler(tauri::generate_handler![open_document,save_document, sessions::create_session, sessions::import_session, sessions::get_session, sessions::list_sessions, sessions::snapshot_session, sessions::save_session, sessions::discard_session, sessions::open_editor_window, sessions::focus_manager])
         .run(tauri::generate_context!())
         .expect("failed to run Rust Office Modern");
 }
