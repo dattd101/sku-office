@@ -1,5 +1,7 @@
-/target/
-/dist/
-*.exe
-*.pdb
-rust-office-windows-x64.zip
+node_modules/
+.next/
+out/
+target/
+src-tauri/target/
+.env*
+*.log
