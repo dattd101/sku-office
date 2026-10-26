@@ -36,3 +36,16 @@ The ZIP was assembled in an environment without Cargo/Rust; compilation and runt
 4. Rich text model, shaping, pagination and layout.
 5. Slide scene graph, drawing engine, master/theme support.
 6. Test corpus and interoperability testing against Microsoft Office/LibreOffice.
+
+## GitHub Actions: build Windows .exe (no local Windows build required)
+
+This repository includes `.github/workflows/windows-build.yml`.
+
+1. Create a new GitHub repository, then upload **the contents of this folder** to the repository root (including the hidden `.github` folder).
+2. Commit and push to `main`, or open **Actions → Build Windows EXE → Run workflow**.
+3. When the job succeeds, open its workflow run and download the `rust-office-windows-x64` artifact. Extract the artifact ZIP, then extract `rust-office-windows-x64.zip` to get `rust-office-desktop.exe`.
+4. For an optional GitHub Release, push a version tag: `git tag v0.2.0` then `git push origin v0.2.0`. GitHub Actions must have permission to create releases (`contents: write` is configured at the job level; repository policies may restrict this).
+
+The workflow uses the GitHub-hosted Windows runner, stable Rust MSVC, `cargo check`, `cargo test`, and a release build for `x86_64-pc-windows-msvc`. Build failures will be visible in Actions logs. `Cargo.lock` is not included in this starter archive, so the workflow resolves dependencies at build time; commit the generated lockfile for reproducible subsequent builds.
+
+**Status:** This workflow was authored and checked for file structure, but no GitHub Actions run has been executed here. A downloadable executable is produced only after a successful workflow run.
