@@ -49,3 +49,12 @@ This repository includes `.github/workflows/windows-build.yml`.
 The workflow uses the GitHub-hosted Windows runner, stable Rust MSVC, `cargo check`, `cargo test`, and a release build for `x86_64-pc-windows-msvc`. Build failures will be visible in Actions logs. `Cargo.lock` is not included in this starter archive, so the workflow resolves dependencies at build time; commit the generated lockfile for reproducible subsequent builds.
 
 **Status:** This workflow was authored and checked for file structure, but no GitHub Actions run has been executed here. A downloadable executable is produced only after a successful workflow run.
+
+
+## 0.3.0 GitHub Actions dependency fix
+
+- Updated `calamine` from 0.26 to 0.31 to address the old `ZipFile` generic and `quick-xml` API compilation failures seen on GitHub Actions.
+- Windows workflow runs `cargo tree -d`, `cargo check`, `cargo test`, and an MSVC release build.
+- Download the built ZIP from Actions > workflow run > Artifacts.
+- This is an MVP, **not** a feature-complete Office 2019 replacement. Opening and saving complex documents can discard formatting or unsupported features. Work on copies.
+- The source has **not** been compiled in this environment; the Windows GitHub Actions run is the authoritative validation.
